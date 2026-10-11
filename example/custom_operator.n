@@ -16,7 +16,7 @@ class Name {
         int start = 0;
         for (int i = 0; i < n; i++) {
             int size = base + (i == 0 ? rem : 0);
-            res.addend(this.context(start, size));
+            res.addend(this=>name.context(start, size));
             start += size;
         }
         return res;
