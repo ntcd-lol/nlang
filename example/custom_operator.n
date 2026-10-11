@@ -1,0 +1,34 @@
+const local auto {
+    io = @add("bsc/io")
+};
+
+class Name {
+    private {
+        char* name;
+    };
+
+    oper (this)/(int n) {
+        char*[*] res;
+        int len = len(name) - 1;
+        int base = len / n;
+        int rem = len % n;
+
+        int start = 0;
+        for (int i = 0; i < n; i++) {
+            int size = base + (i == 0 ? rem : 0);
+            res.addend(this.context(start, size));
+            start += size;
+        }
+        return res;
+    };
+
+    oper (this)/:(int n) {
+        char*[*] list = this / n;
+
+        for (int i = 0; i < n; i++) {
+            list.remend();
+        };
+
+        return list;
+    };
+};
