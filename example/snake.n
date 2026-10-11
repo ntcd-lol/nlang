@@ -1,0 +1,433 @@
+
+const local auto {
+    io = @add("bsc/io"),
+    time = @add("bsc/time")
+};
+
+form FragmentBody {
+    int x,
+    int y,
+    int type
+};
+
+stable class Terminal {
+    private {
+        @later char buffer;
+        int width, height, numChar;
+        int lastChar;
+        bool bufferUpdated;
+        int lastError;
+
+        static dot getPos(int x, int y)
+            -> {pos: int | error: ecode}: uobj {
+
+            if (x <= 0 || y <= 0 ||
+                x > this=>width || y > this=>height) {
+                err("Terminal coordinate out of bounds");
+                error = 1;
+                return;
+            };
+
+            if (!this=>bufferUpdated) {
+                err("Buffer not updated");
+                error = 2;
+                return;
+            };
+
+            pos = ((y - 1) * this=>width) + x;
+            error = 0;
+        };
+    };
+
+    public {
+        oper init() -> ecode {
+            this=>width = io::size.get(io::width);
+            this=>height = io::size.get(io::height);
+            this=>numChar = this=>width * this=>height;
+
+            if (this=>width <= 0 ||
+                this=>height <= 0 ||
+                this=>numChar > MAX_CELLS) {
+                err("Unsupported terminal dimensions");
+                return 1;
+            };
+
+            @now this=>buffer?->char[this=>numChar] buffer = ['' * numChar];
+
+            this=>bufferUpdated = true;
+            this=>lastChar = 1;
+            this=>lastError = 0;
+
+            return 0;
+        };
+
+        dot clear() -> ecode {
+            if (!this=>bufferUpdated) {
+                return 1;
+            };
+
+            this=>buffer = '' * numChar;
+
+            this=>lastChar = 1;
+            return 0;
+        };
+
+        dot put(char c, int x, int y) -> ecode {
+            int pos;
+            int error;
+
+            pos = getPos(x, y);
+
+            if (error != 0) {
+                this=>lastError = error;
+                return error;
+            };
+
+            this=>buffer[pos] = c;
+            return 0;
+        };
+
+        dot render() -> ecode {
+            if (!this=>bufferUpdated) {
+                return 1;
+            };
+
+            io::bout(this=>buffer, flush=true);
+            return 0;
+        };
+
+        dot getWidth() -> int {
+            return this=>width;
+        };
+
+        dot getHeight() -> int {
+            return this=>height;
+        };
+    };
+};
+
+stable class Shake {
+    private {
+        @later FragmentBody[MAX_CELLS] body;
+        int len;
+
+        int dirX;
+        int dirY;
+
+        int nextDirX;
+        int nextDirY;
+
+        int foodX;
+        int foodY;
+
+        int score;
+        int tick;
+        int seed;
+
+        bool alive;
+        bool growing;
+
+        Terminal terminal;
+
+        dot occupies(int x, int y) -> bool {
+            for (int i = 1; i <= this=>len; i++) {
+                if (this=>body[i].x == x &&
+                    this=>body[i].y == y) {
+                    return true;
+                };
+            };
+
+            return false;
+        };
+
+        dot spawnFood() -> ecode {
+            int attempts = 0;
+
+            while (attempts < 8192) {
+                this=>seed =
+                    ((this=>seed * 1103515245) + 12345)
+                    % 2147483647;
+
+                this=>foodX =
+                    (this=>seed % this=>terminal.getWidth()) + 1;
+
+                this=>seed =
+                    ((this=>seed * 1103515245) + 12345)
+                    % 2147483647;
+
+                this=>foodY =
+                    (this=>seed % this=>terminal.getHeight()) + 1;
+
+                if (!this=>occupies(
+                    this=>foodX,
+                    this=>foodY
+                )) {
+                    return 0;
+                };
+
+                attempts++;
+            };
+
+            this=>alive = false;
+            return 1;
+        };
+
+        dot drawBorder() -> ecode {
+            int w = this=>terminal.getWidth();
+            int h = this=>terminal.getHeight();
+
+            for (int x = 1; x <= w; x++) {
+                this=>terminal.put('#', x, 1);
+                this=>terminal.put('#', x, h);
+            };
+
+            for (int y = 1; y <= h; y++) {
+                this=>terminal.put('#', 1, y);
+                this=>terminal.put('#', w, y);
+            };
+
+            return 0;
+        };
+
+        dot drawSnake() -> ecode {
+            for (int i = this=>len; i >= 1; i--) {
+                if (i == 1) {
+                    this=>terminal.put(
+                        '@',
+                        this=>body[i].x,
+                        this=>body[i].y
+                    );
+                } else {
+                    this=>terminal.put(
+                        'o',
+                        this=>body[i].x,
+                        this=>body[i].y
+                    );
+                };
+            };
+
+            return 0;
+        };
+
+        dot drawGame() -> ecode {
+            this=>terminal.clear();
+            this=>drawBorder();
+
+            this=>terminal.put(
+                '*',
+                this=>foodX,
+                this=>foodY
+            );
+
+            this=>drawSnake();
+
+            char* lowbuffer = " score: " + this=>score?->char* + " | WASD / arrows | Q - quit\n"
+            for (int i = 0; i < length(lowbuffer); i++) {
+                this=>terminal.put(lowbuffer[i], this=>terminal.height, i);
+            };
+
+            io::out("\x1b[H");
+            this=>terminal.render();
+
+            return 0;
+        };
+
+    };
+
+    public {
+        oper init() -> ecode {
+            int result = this=>terminal.init();
+
+            if (result != 0) {
+                return result;
+            };
+
+            int w = this=>terminal.getWidth();
+            int h = this=>terminal.getHeight();
+
+            if (w < 12 || h < 8) {
+                err("Terminal is too small");
+                return 1;
+            };
+
+            this=>len = 3;
+
+            this=>body[1] = [w / 2, h / 2, 1];
+            this=>body[2] = [w / 2 - 1, h / 2, 0];
+            this=>body[3] = [w / 2 - 2, h / 2, 2];
+
+            this=>dirX = 1;
+            this=>dirY = 0;
+
+            this=>nextDirX = 1;
+            this=>nextDirY = 0;
+
+            this=>score = 0;
+            this=>tick = 0;
+            this=>seed = 1337;
+
+            this=>alive = true;
+            this=>growing = false;
+
+            return this=>spawnFood();
+        };
+
+        dot changeDirection(char key) -> ecode {
+            if (key == 'w' || key == 'W') {
+                if (this=>dirY != 1) {
+                    this=>nextDirX = 0;
+                    this=>nextDirY = -1;
+                };
+            };
+
+            if (key == 's' || key == 'S') {
+                if (this=>dirY != -1) {
+                    this=>nextDirX = 0;
+                    this=>nextDirY = 1;
+                };
+            };
+
+            if (key == 'a' || key == 'A') {
+                if (this=>dirX != 1) {
+                    this=>nextDirX = -1;
+                    this=>nextDirY = 0;
+                };
+            };
+
+            if (key == 'd' || key == 'D') {
+                if (this=>dirX != -1) {
+                    this=>nextDirX = 1;
+                    this=>nextDirY = 0;
+                };
+            };
+
+            if (key == 'q' || key == 'Q') {
+                this=>alive = false;
+            };
+
+            return 0;
+        };
+
+        dot update() -> ecode {
+            if (!this=>alive) {
+                return 1;
+            };
+
+            this=>dirX = this=>nextDirX;
+            this=>dirY = this=>nextDirY;
+
+            int nx = this=>body[1].x + this=>dirX;
+            int ny = this=>body[1].y + this=>dirY;
+
+            int w = this=>terminal.getWidth();
+            int h = this=>terminal.getHeight();
+
+            // столкновение со стеной.
+            if (nx <= 1 || nx >= w ||
+                ny <= 1 || ny >= h) {
+                this=>alive = false;
+                return 1;
+            };
+
+            this=>growing =
+                (nx == this=>foodX && ny == this=>foodY);
+
+            // при обычном движении хвост освобождается,
+            // поэтому вход в его текущую клетку допустим.
+            int collisionLimit = this=>len;
+
+            if (!this=>growing) {
+                collisionLimit--;
+            };
+
+            for (int i = 1; i <= collisionLimit; i++) {
+                if (this=>body[i].x == nx &&
+                    this=>body[i].y == ny) {
+                    this=>alive = false;
+                    return 1;
+                };
+            };
+
+            if (this=>growing) {
+                if (this=>len >= MAX_CELLS - 1) {
+                    this=>alive = false;
+                    return 1;
+                };
+
+                this=>len++;
+                this=>score += 10;
+            };
+
+            // сдвигаем сегменты от хвоста к голове.
+            for (int i = this=>len; i >= 2; i--) {
+                this=>body[i] = this=>body[i - 1];
+            };
+
+            this=>body[1].x = nx;
+            this=>body[1].y = ny;
+            this=>body[1].type = 1;
+
+            if (this=>len >= 2) {
+                this=>body[2].type = 0;
+            };
+
+            if (this=>growing) {
+                return this=>spawnFood();
+            };
+
+            return 0;
+        };
+
+        dot run() -> ecode {
+            while (this=>alive) {
+                char key = io::kin.poll();
+
+                if (key != '\0') {
+                    this=>changeDirection(key);
+                };
+
+                this=>update();
+                this=>drawGame();
+
+                time::sleep(100);
+            };
+
+            io::out("\nGame over! Score: ");
+            io::out(this=>score);
+            io::out("\n");
+
+            return 0;
+        };
+    };
+};
+
+stable class Game {
+    private {
+        Shake snake;
+    };
+
+    public {
+        oper init() -> ecode {
+            return this=>snake.init();
+        };
+
+        dot start() -> ecode {
+            return this=>snake.run();
+        };
+    };
+};
+
+dot main() -> ecode {
+    int MAX_CELLS = 4096;
+
+    Game game;
+
+    int result = game.init();
+
+    if (result != 0) {
+        err("Failed to initialize game");
+        return result;
+    };
+
+    return game.start();
+};

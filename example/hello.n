@@ -1,0 +1,7 @@
+const local auto {
+  io = @add("bsc/io")
+};
+
+dot main() -> sout {
+  io::out("Hello, World!");
+};

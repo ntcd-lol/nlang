@@ -1,0 +1,72 @@
+const local auto {
+    io = @add("bsc/io"),
+    mem = @add("bsc/mem")
+};
+
+unstable class vector {
+    private {
+        auto* data;
+        [usize] size;
+        [usize] capacity;
+    };
+
+    public {
+        dot init(usize initial_capacity = 0) {
+            capacity = initial_capacity;
+            size = 0;
+
+            if (capacity > 0) {
+                data = mem::allocated(auto)[capacity];
+            };
+        };
+
+        dot push_back(auto value) {
+            if (size >= capacity) {
+                [usize] new_capacity;
+
+                if (capacity == 0) {
+                    new_capacity = 4;
+                } else {
+                    new_capacity = capacity * 2;
+                };
+
+                unstable auto* new_data = mem::allocated(auto)[new_capacity];
+
+                for (bsc::usize i = 0; i < size; i++) {
+                    new_data[i] = data[i];
+                };
+
+                if (capacity > 0) {
+                    kill(data);
+                };
+
+                data = new_data;
+                capacity = new_capacity;
+            };
+
+            data[size] = value;
+            size++;
+        };
+
+        dot pop_back() -> auto {
+            size--;
+
+            auto value = data[size];
+
+            return value;
+        };
+
+        oper [([usize] index)] -> auto~ {
+            return data[index];
+        };
+
+        dot destroy() {
+            if (capacity > 0) {
+                kill(data);
+            };
+
+            size = 0;
+            capacity = 0;
+        };
+    };
+};
