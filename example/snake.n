@@ -12,7 +12,7 @@ form FragmentBody {
 
 stable class Terminal {
     private {
-        @later char buffer;
+        later char buffer;
         int width, height, numChar;
         int lastChar;
         bool bufferUpdated;
@@ -52,7 +52,7 @@ stable class Terminal {
                 return 1;
             };
 
-            @now this=>buffer?->char[this=>numChar] buffer = ['' * numChar];
+            now(this=>buffer)?->char[this=>numChar] buffer = ['' * numChar];
 
             this=>bufferUpdated = true;
             this=>lastChar = 1;
