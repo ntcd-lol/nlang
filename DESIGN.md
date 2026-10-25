@@ -150,17 +150,17 @@ lxapi   - Обертка Syscalls, Linux Kernel API, D-Bus API
       </td>
       <td>
         <code>
-        function compileLanguageN(sourceCode):<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;inputData = Input(sourceCode)<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;tokens = Lexer(inputData)<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;ast = AST(tokens)<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;checkedAST = ForwardCheck(ast)<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;intermediateCode = Compiler(checkedAST)<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;acecCode = ACEC(intermediateCode)<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;processedCode = PostProcessor(acecCode)<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;binaryObject = ELF_EXE_Creator(processedCode)<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;executable = Linker(binaryObject)<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;return Output(executable)
+function compileLanguageN(sourceCode):<br>
+    inputData = Input(sourceCode)<br>
+    tokens = Lexer(inputData)<br>
+    ast = AST(tokens)<br>
+    checkedAST = ForwardCheck(ast)<br>
+    intermediateCode = Compiler(checkedAST)<br>
+    acecCode = ACEC(intermediateCode)<br>
+    processedCode = PostProcessor(acecCode)<br>
+    binaryObject = ELF_EXE_Creator(processedCode)<br>
+    executable = Linker(binaryObject)<br>
+    return Output(executable)
         </code>
       </td>
     </tr>
