@@ -164,7 +164,6 @@ function compileLanguageN(sourceCode):<br>
     executable = Linker(binaryObject)<br>
     return Output(executable)
 ```
-        
         </div>
       </td>
     </tr>
