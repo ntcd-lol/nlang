@@ -149,6 +149,7 @@ lxapi   - Обертка Syscalls, Linux Kernel API, D-Bus API
         <img src="assets/scheme.jpg" alt="Схема компиляции Языка N" width="100%">
       </td>
       <td>
+        <code>
         function compileLanguageN(sourceCode):<br>
         &nbsp;&nbsp;&nbsp;&nbsp;inputData = Input(sourceCode)<br>
         &nbsp;&nbsp;&nbsp;&nbsp;tokens = Lexer(inputData)<br>
@@ -160,6 +161,7 @@ lxapi   - Обертка Syscalls, Linux Kernel API, D-Bus API
         &nbsp;&nbsp;&nbsp;&nbsp;binaryObject = ELF_EXE_Creator(processedCode)<br>
         &nbsp;&nbsp;&nbsp;&nbsp;executable = Linker(binaryObject)<br>
         &nbsp;&nbsp;&nbsp;&nbsp;return Output(executable)
+        </code>
       </td>
     </tr>
   </tbody>
