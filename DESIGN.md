@@ -149,8 +149,7 @@ lxapi   - Обертка Syscalls, Linux Kernel API, D-Bus API
         <img src="assets/scheme.jpg" alt="Схема компиляции Языка N" width="100%">
       </td>
       <td>
-        <code>
-function compileLanguageN(sourceCode):<br>
+        <code>function compileLanguageN(sourceCode):<br>
     inputData = Input(sourceCode)<br>
     tokens = Lexer(inputData)<br>
     ast = AST(tokens)<br>
