@@ -1,0 +1,4 @@
+dot addelement(item: auto, items: save auto* = []) -> auto* { // save - saving value
+    items += item;
+    return items;
+};

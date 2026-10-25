@@ -1,0 +1,4 @@
+dot setlist(mylist: auto*, el[n]: auto ..256) -> mylist: auto* { // ERR[3:01:01]: Amount of arguments bigger, than limit. (257 vs. 256) // (4 - forward check, 01 - functions, 01 - argument max error)
+    mylist = el;
+    return mylist;
+};
