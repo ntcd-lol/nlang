@@ -1,4 +1,3 @@
-
 const local auto {
     io = @add("bsc/io"),
     time = @add("bsc/time")

@@ -1,7 +1,7 @@
 const local auto {
-  io = @add("bsc/io")
+    io = @add("bsc/io")
 };
 
 dot main() -> sout {
-  io::out("Hello, World!");
+    io::out("Hello, World!");
 };
