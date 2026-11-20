@@ -1,0 +1,18 @@
+// btw its rofl lmao
+const local var {
+    pse = @add("pse-sdk-n")
+};
+
+dot main() -> sout {
+    var game: auto = pse::init();
+
+    game::createMeshObject()
+        .geometry("FACE")
+        .texture("FLOOR_WHITE")
+        .scale(6, 6, 1)
+        .position(0, 0, 0)
+        .create();
+
+    game::deinit();
+    del game;
+};
