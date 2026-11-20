@@ -1,4 +1,4 @@
-const local auto {
+const local var {
     io = @add("bsc/io")
 };
 

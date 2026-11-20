@@ -1,17 +1,17 @@
-const local auto {
+const local var {
     io = @add("bsc/io"),
     mem = @add("bsc/mem")
 };
 
 unstable class vector {
     private {
-        auto* data;
-        [usize] size;
-        [usize] capacity;
+        var dat: auto*;
+        var size: [usize]; // fixed в таком виде под вопросом
+        var capacity: [usize];
     };
 
     public {
-        dot init(usize initial_capacity = 0) {
+        dot init(initial_capacity: usize = 0) {
             capacity = initial_capacity;
             size = 0;
 
@@ -20,9 +20,9 @@ unstable class vector {
             };
         };
 
-        dot push_back(auto value) {
+        dot push_back(value: auto) {
             if (size >= capacity) {
-                [usize] new_capacity;
+                var new_capacity: [usize];
 
                 if (capacity == 0) {
                     new_capacity = 4;
@@ -30,9 +30,9 @@ unstable class vector {
                     new_capacity = capacity * 2;
                 };
 
-                unstable auto* new_data = mem::allocated(auto)[new_capacity];
+                unstable var new_data: auto* = mem::allocated(auto)[new_capacity];
 
-                for (bsc::usize i = 0; i < size; i++) {
+                for (0...<size as i) {
                     new_data[i] = data[i];
                 };
 
@@ -51,12 +51,12 @@ unstable class vector {
         dot pop_back() -> auto {
             size--;
 
-            auto value = data[size];
+            var value: auto = data[size];
 
             return value;
         };
 
-        oper [([usize] index)] -> auto~ {
+        oper [(index: [usize])] -> auto~ {
             return data[index];
         };
 

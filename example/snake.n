@@ -1,21 +1,21 @@
-const local auto {
+const local var {
     io = @add("bsc/io"),
     time = @add("bsc/time")
 };
 
 form FragmentBody {
-    int x,
-    int y,
-    int type
+    var x: int,
+    var y: int,
+    var type
 };
 
 stable class Terminal {
     private {
-        later char buffer;
-        int width, height, numChar;
-        int lastChar;
-        bool bufferUpdated;
-        int lastError;
+        var buffer: later;
+        var [width, height, numChar]: int;
+        var lastChar: int;
+        var bufferUpdated: bool;
+        var lastError: int;
 
         static dot getPos(int x, int y)
             -> {pos: int | error: ecode}: uobj {
@@ -72,8 +72,8 @@ stable class Terminal {
         };
 
         dot put(char c, int x, int y) -> ecode {
-            int pos;
-            int error;
+            var pos: int;
+            var error: int;
 
             pos = getPos(x, y);
 
@@ -107,26 +107,13 @@ stable class Terminal {
 
 stable class Shake {
     private {
-        @later FragmentBody[MAX_CELLS] body;
-        int len;
+        var body: later;
+        var [len, dirX, dirY, nextDirX, nextDirY, foodX, foodY, score, tick, seed]: int;
 
-        int dirX;
-        int dirY;
-
-        int nextDirX;
-        int nextDirY;
-
-        int foodX;
-        int foodY;
-
-        int score;
-        int tick;
-        int seed;
-
-        bool alive;
+        bool [alive, growing];
         bool growing;
 
-        Terminal terminal;
+        var terminal: instance @ Terminal;
 
         dot occupies(int x, int y) -> bool {
             for (int i = 1; i <= this=>len; i++) {
@@ -140,7 +127,7 @@ stable class Shake {
         };
 
         dot spawnFood() -> ecode {
-            int attempts = 0;
+            var attempts: int = 0;
 
             while (attempts < 8192) {
                 this=>seed =
@@ -172,15 +159,15 @@ stable class Shake {
         };
 
         dot drawBorder() -> ecode {
-            int w = this=>terminal.getWidth();
-            int h = this=>terminal.getHeight();
+            var w: int = this=>terminal.getWidth();
+            var h: int = this=>terminal.getHeight();
 
-            for (int x = 1; x <= w; x++) {
+            for (0...<=w as x) { // maybe, i can to remake syntax
                 this=>terminal.put('#', x, 1);
                 this=>terminal.put('#', x, h);
             };
 
-            for (int y = 1; y <= h; y++) {
+            for (0...<=h as y) {
                 this=>terminal.put('#', 1, y);
                 this=>terminal.put('#', w, y);
             };
@@ -189,7 +176,7 @@ stable class Shake {
         };
 
         dot drawSnake() -> ecode {
-            for (int i = this=>len; i >= 1; i--) {
+            for (this=>len...>=1 as i) {
                 if (i == 1) {
                     this=>terminal.put(
                         '@',
@@ -220,7 +207,7 @@ stable class Shake {
 
             this=>drawSnake();
 
-            char* lowbuffer = " score: " + this=>score?->char* + " | WASD / arrows | Q - quit\n"
+            var lowbuffer: char* = " score: " + this=>score?->char* + " | WASD / arrows | Q - quit\n"
             for (int i = 0; i < length(lowbuffer); i++) {
                 this=>terminal.put(lowbuffer[i], this=>terminal.height, i);
             };
@@ -235,14 +222,14 @@ stable class Shake {
 
     public {
         oper init() -> ecode {
-            int result = this=>terminal.init();
+            var result: int = this=>terminal.init();
 
             if (result != 0) {
                 return result;
             };
 
-            int w = this=>terminal.getWidth();
-            int h = this=>terminal.getHeight();
+            var w: int = this=>terminal.getWidth();
+            var h: int = this=>terminal.getHeight();
 
             if (w < 12 || h < 8) {
                 err("Terminal is too small");
@@ -271,7 +258,7 @@ stable class Shake {
             return this=>spawnFood();
         };
 
-        dot changeDirection(char key) -> ecode {
+        dot changeDirection(char key) -> ecode { // *type* *name* - legacy, *name*: *type* - new.
             if (key == 'w' || key == 'W') {
                 if (this=>dirY != 1) {
                     this=>nextDirX = 0;
@@ -315,11 +302,11 @@ stable class Shake {
             this=>dirX = this=>nextDirX;
             this=>dirY = this=>nextDirY;
 
-            int nx = this=>body[1].x + this=>dirX;
-            int ny = this=>body[1].y + this=>dirY;
+            var nx: int = this=>body[1].x + this=>dirX;
+            var ny: int = this=>body[1].y + this=>dirY;
 
-            int w = this=>terminal.getWidth();
-            int h = this=>terminal.getHeight();
+            var w: int = this=>terminal.getWidth();
+            var h: int = this=>terminal.getHeight();
 
             // столкновение со стеной.
             if (nx <= 1 || nx >= w ||
@@ -333,13 +320,13 @@ stable class Shake {
 
             // при обычном движении хвост освобождается,
             // поэтому вход в его текущую клетку допустим.
-            int collisionLimit = this=>len;
+            var collisionLimit: int = this=>len;
 
             if (!this=>growing) {
                 collisionLimit--;
             };
 
-            for (int i = 1; i <= collisionLimit; i++) {
+            for (1...<=collisionLimit as i) {
                 if (this=>body[i].x == nx &&
                     this=>body[i].y == ny) {
                     this=>alive = false;
@@ -358,7 +345,7 @@ stable class Shake {
             };
 
             // сдвигаем сегменты от хвоста к голове.
-            for (int i = this=>len; i >= 2; i--) {
+            for (this=>len...>=2 as i) {
                 this=>body[i] = this=>body[i - 1];
             };
 
@@ -402,7 +389,7 @@ stable class Shake {
 
 stable class Game {
     private {
-        Shake snake;
+        var snake: instance @ Shake;
     };
 
     public {
@@ -417,11 +404,11 @@ stable class Game {
 };
 
 dot main() -> ecode {
-    int MAX_CELLS = 4096;
+    var MAX_CELLS: int = 4096;
 
-    Game game;
+    var game: instance @ Game;
 
-    int result = game.init();
+    var result: int = game.init();
 
     if (result != 0) {
         err("Failed to initialize game");
