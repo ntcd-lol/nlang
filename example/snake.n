@@ -110,8 +110,7 @@ stable class Shake {
         var body: later;
         var [len, dirX, dirY, nextDirX, nextDirY, foodX, foodY, score, tick, seed]: int;
 
-        bool [alive, growing];
-        bool growing;
+        var [alive, growing]: bool;
 
         var terminal: instance @ Terminal;
 
